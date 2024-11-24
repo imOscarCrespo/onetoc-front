@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, PlayCircle, Users } from 'lucide-react';
+import { Plus, PlayCircle, Users, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../lib/axios';
 import Modal from '../components/Modal';
 import TeamSidebar from '../components/TeamSidebar';
 import toast from 'react-hot-toast';
+import Header from '../components/Header';
 
 interface Match {
   id: number;
@@ -13,12 +14,16 @@ interface Match {
   created_at: string;
 }
 
+type ModalType = 'create' | 'edit' | 'delete';
+
 export default function Matches() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matchName, setMatchName] = useState('');
+  const [modalType, setModalType] = useState<ModalType>('create');
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
   const { data: matches, isLoading } = useQuery<Match[]>({
     queryKey: ['matches', teamId],
@@ -30,21 +35,11 @@ export default function Matches() {
 
   const createMatch = useMutation({
     mutationFn: async (name: string) => {
-      const matchResponse = await api.post('/match', {
+      return api.post('/match', {
         name,
         team: Number(teamId),
         tab: 1
       });
-
-      await api.post('/action', {
-        name: "automatic",
-        color: "#000000",
-        match: matchResponse.data.id,
-        enabled: true,
-        default: false
-      });
-
-      return matchResponse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matches', teamId] });
@@ -57,10 +52,37 @@ export default function Matches() {
     }
   });
 
+  const deleteMatch = useMutation({
+    mutationFn: async (matchId: number) => {
+      return api.delete(`/match/${matchId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matches', teamId] });
+      setIsModalOpen(false);
+      setSelectedMatch(null);
+      toast.success('Match deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete match');
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (matchName.trim()) {
       createMatch.mutate(matchName);
+    }
+  };
+
+  const handleDelete = (match: Match) => {
+    setModalType('delete');
+    setSelectedMatch(match);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedMatch) {
+      deleteMatch.mutate(selectedMatch.id);
     }
   };
 
@@ -99,10 +121,24 @@ export default function Matches() {
                   className="p-4 cursor-pointer"
                   onClick={() => navigate(`/match/${match.id}`)}
                 >
-                  <h3 className="font-medium mb-2">{match.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {new Date(match.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium mb-2">{match.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {new Date(match.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(match);
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                      title="Delete match"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="border-t border-gray-100 p-3 bg-gray-50 flex gap-2">
@@ -132,50 +168,87 @@ export default function Matches() {
           </div>
         </div>
 
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setMatchName('');
-          }}
-          title="Create New Match"
-        >
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="matchName" className="block text-sm font-medium text-gray-700 mb-1">
-                Match Name
-              </label>
-              <input
-                type="text"
-                id="matchName"
-                value={matchName}
-                onChange={(e) => setMatchName(e.target.value)}
-                className="input"
-                placeholder="Enter match name"
-                required
-              />
+        {modalType === 'delete' ? (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedMatch(null);
+            }}
+            title="Delete Match"
+          >
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Are you sure you want to delete <span className="font-medium">{selectedMatch?.name}</span>? 
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setSelectedMatch(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteMatch.isPending}
+                  className="btn bg-red-500 hover:bg-red-600"
+                >
+                  {deleteMatch.isPending ? 'Deleting...' : 'Delete Match'}
+                </button>
+              </div>
             </div>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setMatchName('');
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn"
-                disabled={createMatch.isPending}
-              >
-                {createMatch.isPending ? 'Creating...' : 'Create Match'}
-              </button>
-            </div>
-          </form>
-        </Modal>
+          </Modal>
+        ) : (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setMatchName('');
+            }}
+            title="Create New Match"
+          >
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label htmlFor="matchName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Match Name
+                </label>
+                <input
+                  type="text"
+                  id="matchName"
+                  value={matchName}
+                  onChange={(e) => setMatchName(e.target.value)}
+                  className="input"
+                  placeholder="Enter match name"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setMatchName('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn"
+                  disabled={createMatch.isPending}
+                >
+                  {createMatch.isPending ? 'Creating...' : 'Create Match'}
+                </button>
+              </div>
+            </form>
+          </Modal>
+        )}
       </main>
     </div>
   );

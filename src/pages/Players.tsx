@@ -1,8 +1,10 @@
 import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../lib/axios';
 import TeamSidebar from '../components/TeamSidebar';
-import { Plus, Clock } from 'lucide-react';
-import Modal from '../components/Modal';
+import { Plus, Trash2, Edit2, Clock } from 'lucide-react';
 import { useState } from 'react';
+import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 
 interface Player {
@@ -10,54 +12,265 @@ interface Player {
   name: string;
   number: string;
   position: string;
-  minutes_played: number;
+  total_minutes: number;
 }
 
-// Mock data while backend endpoint is not available
-const mockPlayers: Player[] = [
-  { id: 1, name: 'John Smith', number: '10', position: 'Forward', minutes_played: 540 },
-  { id: 2, name: 'David Wilson', number: '1', position: 'Goalkeeper', minutes_played: 450 },
-  { id: 3, name: 'Michael Brown', number: '4', position: 'Defender', minutes_played: 380 },
-  { id: 4, name: 'James Davis', number: '8', position: 'Midfielder', minutes_played: 320 },
-  { id: 5, name: 'Robert Taylor', number: '7', position: 'Forward', minutes_played: 290 },
-  { id: 6, name: 'William Moore', number: '6', position: 'Midfielder', minutes_played: 180 }
-];
+type ModalType = 'create' | 'edit' | 'delete';
 
 export default function Players() {
   const { teamId } = useParams();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>('create');
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [playerData, setPlayerData] = useState({
     name: '',
     number: '',
-    position: '',
+    position: ''
   });
-  const [players, setPlayers] = useState<Player[]>(mockPlayers);
+
+  const { data: players, isLoading } = useQuery<Player[]>({
+    queryKey: ['players', teamId],
+    queryFn: async () => {
+      const response = await api.get(`/player?team=${teamId}`);
+      return response.data;
+    },
+  });
+
+  const createPlayer = useMutation({
+    mutationFn: async (data: typeof playerData) => {
+      return api.post('/player', {
+        name: data.name,
+        team: Number(teamId),
+        position: data.position,
+        number: Number(data.number)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', teamId] });
+      setIsModalOpen(false);
+      resetForm();
+      toast.success('Player added successfully');
+    },
+    onError: () => {
+      toast.error('Failed to add player');
+    }
+  });
+
+  const updatePlayer = useMutation({
+    mutationFn: async (data: typeof playerData & { id: number }) => {
+      return api.patch(`/player/${data.id}`, {
+        name: data.name,
+        position: data.position,
+        number: Number(data.number)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', teamId] });
+      setIsModalOpen(false);
+      resetForm();
+      toast.success('Player updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update player');
+    }
+  });
+
+  const deletePlayer = useMutation({
+    mutationFn: async (playerId: number) => {
+      return api.delete(`/player/${playerId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', teamId] });
+      setIsModalOpen(false);
+      setSelectedPlayer(null);
+      toast.success('Player deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete player');
+    }
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (playerData.name.trim() && playerData.number.trim() && playerData.position.trim()) {
-      // Add new player to mock data
-      const newPlayer: Player = {
-        id: players.length + 1,
-        ...playerData,
-        minutes_played: 0
-      };
-      
-      setPlayers(prev => [...prev, newPlayer]);
-      setIsModalOpen(false);
-      setPlayerData({ name: '', number: '', position: '' });
-      toast.success('Player added successfully');
+    if (playerData.name && playerData.number && playerData.position) {
+      if (modalType === 'create') {
+        createPlayer.mutate(playerData);
+      } else if (modalType === 'edit' && selectedPlayer) {
+        updatePlayer.mutate({ ...playerData, id: selectedPlayer.id });
+      }
     }
   };
 
+  const handleEdit = (player: Player) => {
+    setModalType('edit');
+    setSelectedPlayer(player);
+    setPlayerData({
+      name: player.name,
+      number: player.number,
+      position: player.position
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (player: Player) => {
+    setModalType('delete');
+    setSelectedPlayer(player);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedPlayer) {
+      deletePlayer.mutate(selectedPlayer.id);
+    }
+  };
+
+  const resetForm = () => {
+    setPlayerData({ name: '', number: '', position: '' });
+    setSelectedPlayer(null);
+    setModalType('create');
+  };
+
   const positions = [
-    'Goalkeeper',
-    'Defender',
-    'Midfielder',
-    'Forward'
+    'GOALKEEPER',
+    'DEFENDER',
+    'MIDFIELDER',
+    'FORWARD'
   ];
 
-  const sortedPlayers = [...players].sort((a, b) => b.minutes_played - a.minutes_played);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-black" />
+      </div>
+    );
+  }
+
+  const renderModal = () => {
+    if (modalType === 'delete') {
+      return (
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedPlayer(null);
+          }}
+          title="Delete Player"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Are you sure you want to delete <span className="font-medium">{selectedPlayer?.name}</span>? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedPlayer(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deletePlayer.isPending}
+                className="btn bg-red-500 hover:bg-red-600"
+              >
+                {deletePlayer.isPending ? 'Deleting...' : 'Delete Player'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    return (
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          resetForm();
+        }}
+        title={modalType === 'create' ? 'Add New Player' : 'Edit Player'}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Player Name
+              </label>
+              <input
+                type="text"
+                value={playerData.name}
+                onChange={(e) => setPlayerData(prev => ({ ...prev, name: e.target.value }))}
+                className="input"
+                placeholder="Enter player name"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Jersey Number
+              </label>
+              <input
+                type="number"
+                value={playerData.number}
+                onChange={(e) => setPlayerData(prev => ({ ...prev, number: e.target.value }))}
+                className="input"
+                placeholder="Enter jersey number"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Position
+              </label>
+              <select
+                value={playerData.position}
+                onChange={(e) => setPlayerData(prev => ({ ...prev, position: e.target.value }))}
+                className="input"
+                required
+              >
+                <option value="">Select position</option>
+                {positions.map(position => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                setIsModalOpen(false);
+                resetForm();
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn"
+              disabled={createPlayer.isPending || updatePlayer.isPending}
+            >
+              {modalType === 'create' 
+                ? (createPlayer.isPending ? 'Adding...' : 'Add Player')
+                : (updatePlayer.isPending ? 'Updating...' : 'Update Player')
+              }
+            </button>
+          </div>
+        </form>
+      </Modal>
+    );
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -68,16 +281,20 @@ export default function Players() {
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-medium">Players</h1>
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                resetForm();
+                setModalType('create');
+                setIsModalOpen(true);
+              }}
               className="btn flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Player
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedPlayers.map((player) => (
+            {players?.map((player) => (
               <div
                 key={player.id}
                 className="bg-white rounded-lg border border-gray-200 p-4 hover:border-black transition-colors"
@@ -89,104 +306,40 @@ export default function Players() {
                   <div className="flex-1">
                     <h3 className="font-medium">{player.name}</h3>
                     <p className="text-sm text-gray-500">{player.position}</p>
+                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                      <Clock className="w-4 h-4" />
+                      <span>{player.total_minutes} minutes played</span>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 text-sm text-gray-500">
-                  <Clock className="w-4 h-4" />
-                  <span>{player.minutes_played} minutes played</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(player)}
+                      className="p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 transition-colors"
+                      title="Edit player"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(player)}
+                      className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                      title="Delete player"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
 
-            {!players.length && (
-              <div className="col-span-full text-center py-12 text-gray-500">
+            {!players?.length && (
+              <div className="col-span-full text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200">
                 No players found. Add your first player to get started!
               </div>
             )}
           </div>
         </div>
 
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setPlayerData({ name: '', number: '', position: '' });
-          }}
-          title="Add New Player"
-        >
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Player Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={playerData.name}
-                  onChange={(e) => setPlayerData(prev => ({ ...prev, name: e.target.value }))}
-                  className="input"
-                  placeholder="Enter player name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="number" className="block text-sm font-medium text-gray-700 mb-1">
-                  Jersey Number
-                </label>
-                <input
-                  type="text"
-                  id="number"
-                  value={playerData.number}
-                  onChange={(e) => setPlayerData(prev => ({ ...prev, number: e.target.value }))}
-                  className="input"
-                  placeholder="Enter jersey number"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                  Position
-                </label>
-                <select
-                  id="position"
-                  value={playerData.position}
-                  onChange={(e) => setPlayerData(prev => ({ ...prev, position: e.target.value }))}
-                  className="input"
-                  required
-                >
-                  <option value="">Select position</option>
-                  {positions.map(position => (
-                    <option key={position} value={position}>
-                      {position}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setPlayerData({ name: '', number: '', position: '' });
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn"
-              >
-                Add Player
-              </button>
-            </div>
-          </form>
-        </Modal>
+        {renderModal()}
       </main>
     </div>
   );

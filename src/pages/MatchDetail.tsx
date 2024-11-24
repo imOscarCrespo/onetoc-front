@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { api } from '../lib/axios';
 import toast from 'react-hot-toast';
 import { useMatchVideo } from '../hooks/useMatchVideo';
@@ -24,7 +24,6 @@ interface Match {
 
 export default function MatchDetail() {
   const { matchId } = useParams();
-  const navigate = useNavigate();
   const { videoUrl, handleFileUpload, removeVideo } = useMatchVideo(matchId || '');
   const { actions, events, isLoading: isLoadingActions, createEvent } = useMatchActions(matchId || '');
   const [showEvents, setShowEvents] = useState(true);
@@ -129,15 +128,6 @@ export default function MatchDetail() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm text-gray-500 hover:text-black mb-2"
-        >
-          ← Back to Matches
-        </button>
-        <h1 className="text-xl font-medium">{match?.name}</h1>
-      </div>
 
       {!match?.media && !videoUrl && (
         <div className="border border-gray-200 rounded p-8 text-center mb-8">
@@ -172,13 +162,15 @@ export default function MatchDetail() {
             }}
             showRemoveButton={!match?.media}
             onAddAction={async (timestamp) => {
-              const result = await createEvent.mutateAsync(timestamp);
+              const result = await createEvent.mutateAsync(timestamp.toString());
               return result;
             }}
             initialMarkers={events?.map(event => ({
               timestamp: event.delay,
               date: event.created_at
-            })) || []}
+            })).sort((a, b) => 
+              a.timestamp - b.timestamp
+            ) || []}
           />
         </div>
       )}

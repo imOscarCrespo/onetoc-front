@@ -1,13 +1,12 @@
-import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 
 interface HeaderProps {
-  title: string;
-  showBackButton?: boolean;
-  backButtonText?: string;
+  backText?: string;
+  onBack?: () => void;
 }
 
-export default function Header({ title, showBackButton, backButtonText = 'Back' }: HeaderProps) {
+export default function Header({ backText = 'Back', onBack }: HeaderProps) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -16,28 +15,35 @@ export default function Header({ title, showBackButton, backButtonText = 'Back' 
     navigate('/login', { replace: true });
   };
 
+  const isMainPage = window.location.pathname.includes('team')
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (window.location.pathname.includes('team')) {
+      navigate('/team');
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <header className="header py-4">
-      <div className="max-w-5xl mx-auto px-4">
+      <div className="mx-auto px-4">
         <div className="flex items-center justify-between">
-          <div>
-            {showBackButton && (
-              <button
-                onClick={() => navigate(-1)}
-                className="text-sm text-gray-500 hover:text-white mb-2 block transition-colors"
-              >
-                ← {backButtonText}
-              </button>
-            )}
-            <h1 className="text-xl font-medium text-white">{title}</h1>
-          </div>
+          <button
+            onClick={handleBack}
+            className="flex gap-2 text-sm text-gray-500 transition-colors"
+          >
+            ← {isMainPage ? 'Change Team' : backText}
+          </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
             title="Logout"
           >
             <LogOut className="w-4 h-4" />
-            <span>Logout</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>

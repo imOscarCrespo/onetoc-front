@@ -150,7 +150,7 @@ export default function VideoPlayer({
     const y = e.clientY - rect.top;
 
     ctx.beginPath();
-    ctx.strokeStyle = '#00ff00'; // Bright green color
+    ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.moveTo(lastPoint.x, lastPoint.y);
@@ -220,7 +220,7 @@ export default function VideoPlayer({
           
           .marker-overlay {
             position: absolute;
-            bottom: 45px;
+            bottom: 48px;
             left: 12px;
             right: 12px;
             height: 0;
@@ -229,10 +229,23 @@ export default function VideoPlayer({
           
           .marker-overlay .marker {
             position: absolute;
-            bottom: -2px;
+            bottom: 0;
             transform: translateX(-50%);
             cursor: pointer;
             pointer-events: auto;
+          }
+
+          .marker-overlay .marker div {
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid #ef4444;
+            border-radius: 50%;
+            background: transparent;
+          }
+
+          .marker-overlay .marker:hover div {
+            background: #ef4444;
+            transition: background-color 0.2s;
           }
         `}</style>
 
@@ -260,14 +273,11 @@ export default function VideoPlayer({
             {markers.map((marker, index) => (
               <div 
                 key={index}
-                className="marker group/marker"
+                className="marker"
                 style={{ left: `${(marker.timestamp / duration) * 100}%` }}
                 onClick={() => seekToTime(marker.timestamp)}
               >
-                <div className="w-3 h-3 bg-red-500 rounded-full" />
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/75 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover/marker:opacity-100 transition-opacity">
-                  {new Date(marker.timestamp * 1000).toISOString().substr(11, 8)}
-                </div>
+                <div />
               </div>
             ))}
           </div>
