@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const LOCAL = 'http://127.0.0.1:8000/'
-
-const BASE_URL = LOCAL;
+const BASE_URL = 'https://onetoc-backend-production.up.railway.app';
 
 export const api = axios.create({
   baseURL: BASE_URL,
