@@ -26,7 +26,8 @@ export default function Players() {
   const [playerData, setPlayerData] = useState({
     name: '',
     number: '',
-    position: ''
+    position: '',
+    total_minutes: 0,
   });
 
   const { data: players, isLoading } = useQuery<Player[]>({
@@ -62,7 +63,8 @@ export default function Players() {
       return api.patch(`/player/${data.id}`, {
         name: data.name,
         position: data.position,
-        number: Number(data.number)
+        number: Number(data.number),
+        total_minutes: data.total_minutes
       });
     },
     onSuccess: () => {
@@ -97,7 +99,8 @@ export default function Players() {
       if (modalType === 'create') {
         createPlayer.mutate(playerData);
       } else if (modalType === 'edit' && selectedPlayer) {
-        updatePlayer.mutate({ ...playerData, id: selectedPlayer.id });
+        const updatedTotalMinutes = (selectedPlayer.total_minutes || 0) + playerData.total_minutes;
+        updatePlayer.mutate({ ...playerData, id: selectedPlayer.id, total_minutes: updatedTotalMinutes });
       }
     }
   };
@@ -108,7 +111,8 @@ export default function Players() {
     setPlayerData({
       name: player.name,
       number: player.number,
-      position: player.position
+      position: player.position,
+      total_minutes: player.total_minutes
     });
     setIsModalOpen(true);
   };
@@ -126,7 +130,7 @@ export default function Players() {
   };
 
   const resetForm = () => {
-    setPlayerData({ name: '', number: '', position: '' });
+    setPlayerData({ name: '', number: '', position: '', total_minutes: 0 });
     setSelectedPlayer(null);
     setModalType('create');
   };
@@ -243,6 +247,20 @@ export default function Players() {
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Add minutes
+              </label>
+              <input
+                type="text"
+                value={playerData.total_minutes}
+                onChange={(e) => setPlayerData(prev => ({ ...prev, total_minutes: parseInt(e.target.value, 10) || 0 }))}
+                className="input"
+                placeholder="Enter total minutes played"
+                required
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
@@ -308,7 +326,7 @@ export default function Players() {
                     <p className="text-sm text-gray-500">{player.position}</p>
                     <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                       <Clock className="w-4 h-4" />
-                      <span>{player.total_minutes} minutes played</span>
+                      <span>{player.total_minutes} min played</span>
                     </div>
                   </div>
                   <div className="flex gap-2">

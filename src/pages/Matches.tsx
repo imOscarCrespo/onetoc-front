@@ -6,7 +6,6 @@ import { api } from '../lib/axios';
 import Modal from '../components/Modal';
 import TeamSidebar from '../components/TeamSidebar';
 import toast from 'react-hot-toast';
-import Header from '../components/Header';
 
 interface Match {
   id: number;
@@ -143,7 +142,7 @@ export default function Matches() {
                 
                 <div className="border-t border-gray-100 p-3 bg-gray-50 flex gap-2">
                   <button
-                    onClick={() => navigate(`/match/${match.id}/lineup`)}
+                    onClick={() => navigate(`/match/${match.id}/lineup?teamId=${teamId}`)}
                     className="btn bg-blue-500 hover:bg-blue-600 flex-1 flex items-center justify-center gap-2 py-2"
                   >
                     <Users className="w-4 h-4" />

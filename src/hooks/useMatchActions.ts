@@ -41,32 +41,7 @@ export function useMatchActions(matchId: string) {
     },
   });
 
-  // Create default actions if they don't exist
-  // const createDefaultActions = useMutation({
-  //   mutationFn: async () => {
-  //     if (!match?.team) return;
-  //     console.log('3')
-  //     const existingActions = await api.get(`/action?matches=${matchId}&team=${match.team}`);
-  //     const existingKeys = new Set(existingActions.data.map((a: Action) => a.key));
 
-  //     const actionsToCreate = DEFAULT_ACTIONS.filter(action => !existingKeys.has(action.key));
-
-  //     if (actionsToCreate.length === 0) return;
-  //     console.log('2')
-  //     return Promise.all(
-  //       actionsToCreate.map(action =>
-  //         api.post('/action', {
-  //           ...action,
-  //           team: match.team,
-  //           match: null
-  //         })
-  //       )
-  //     );
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ['actions', matchId] });
-  //   }
-  // });
 
   // Get actions after ensuring defaults exist
   const { data: actions, isLoading: isLoadingActions } = useQuery<Action[]>({
