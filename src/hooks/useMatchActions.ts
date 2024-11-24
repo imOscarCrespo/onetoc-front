@@ -21,19 +21,13 @@ interface Event {
   created_at: string;
   updated_at: string;
   updated_by: number;
-  delay: number;
+  start: number,
+  delay_start: number;
   type: string;
 }
 
 const TIME_OFFSET = 7; // 7 seconds offset
 
-const DEFAULT_ACTIONS = Object.entries(actionTranslations).map(([key, value]) => ({
-  name: value.name,
-  key,
-  color: '#000000',
-  enabled: true,
-  default: true
-}));
 
 export function useMatchActions(matchId: string) {
   const queryClient = useQueryClient();
@@ -79,9 +73,7 @@ export function useMatchActions(matchId: string) {
     queryKey: ['actions', matchId],
     queryFn: async () => {
       if (!match?.team) return [];
-      // await createDefaultActions.mutateAsync();
-      console.log('4')
-      const response = await api.get(`/action?matches=${matchId}&team=${match.team}`);
+      const response = await api.get(`/action?&team=${match.team}`);
       return response.data;
     },
     enabled: !!match?.team
@@ -91,7 +83,7 @@ export function useMatchActions(matchId: string) {
     queryKey: ['events', matchId],
     queryFn: async () => {
       const response = await api.get(`/event?match=${matchId}`);
-      return response.data;
+      return response.data.sort((a: Event, b: Event) => (a.start-a.delay_start) - (b.start-b.delay_start));
     },
   });
 
@@ -105,7 +97,8 @@ export function useMatchActions(matchId: string) {
       const response = await api.post('/event', {
         match: Number(matchId),
         action: selectedAction.id,
-        delay: Math.max(0, Date.now() / 1000 - TIME_OFFSET),
+        start: Math.max(0, Date.now() / 1000 - TIME_OFFSET),
+        delay_start: 7,
         type: actionKey
       });
       

@@ -16,7 +16,8 @@ interface Event {
   created_at: string;
   updated_at: string;
   updated_by: number;
-  delay: number;
+  start: number,
+  delay_start: number;
   type: string;
 }
 
@@ -34,8 +35,7 @@ export function useMatchStats(matchId: string) {
     queryKey: ['actions', matchId],
     queryFn: async () => {
       if (!match?.team) return [];
-      console.log('1')
-      const response = await api.get(`/action?matches=${matchId}&team=${match.team}`);
+      const response = await api.get(`/action?&team=${match.team}`);
       return response.data;
     },
     enabled: !!match?.team

@@ -16,8 +16,8 @@ api.interceptors.request.use(async (config) => {
   }
 
   try {
-    const { exp } = jwtDecode(accessToken);
-    const isExpired = exp * 1000 < Date.now();
+    const decodedToken = jwtDecode<{ exp: number }>(accessToken);
+    const isExpired = decodedToken.exp * 1000 < Date.now();
 
     if (isExpired) {
       const response = await axios.post(`${BASE_URL}/api/token/refresh/`, {

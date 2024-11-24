@@ -7,6 +7,7 @@ import { useMatchActions } from '../hooks/useMatchActions';
 import VideoPlayer from '../components/VideoPlayer';
 import { ChevronDown, ChevronUp, Save } from 'lucide-react';
 import { useState } from 'react';
+import { useTimer } from '../hooks/useTimer';
 
 interface Match {
   id: number;
@@ -39,16 +40,17 @@ export default function MatchDetail() {
     },
   });
 
+  const { formatTime } = useTimer(matchId || '');
+
   const adjustEventDelays = useMutation({
     mutationFn: async (adjustment: number) => {
       if (!events?.length) return;
-      
       const eventIds = events.map(event => event.id);
       
       await api.patch('/event', {
         ids: eventIds,
         update: {
-          delay: adjustment
+          delay_start: adjustment
         }
       });
     },
@@ -66,9 +68,8 @@ export default function MatchDetail() {
     mutationFn: async ({ eventId, adjustment }: { eventId: number; adjustment: number }) => {
       const event = events?.find(e => e.id === eventId);
       if (!event) throw new Error('Event not found');
-
       await api.patch(`/event/${eventId}/`, {
-        delay: Math.max(0, event.delay + adjustment)
+        delay_start: event.delay_start + adjustment
       });
     },
     onSuccess: () => {
@@ -93,7 +94,7 @@ export default function MatchDetail() {
     const baseEvent = events?.[0];
     if (!baseEvent) return;
 
-    const newDelay = Math.max(0, baseEvent.delay + adjustment);
+    const newDelay = Math.max(0, baseEvent.delay_start + adjustment);
     adjustEventDelays.mutate(newDelay);
   };
 
@@ -166,7 +167,7 @@ export default function MatchDetail() {
               return result;
             }}
             initialMarkers={events?.map(event => ({
-              timestamp: event.delay,
+              timestamp: event.start-event.delay_start,
               date: event.created_at
             })).sort((a, b) => 
               a.timestamp - b.timestamp
@@ -225,7 +226,7 @@ export default function MatchDetail() {
                     return (
                       <tr key={event.id} className="border-b border-gray-200 last:border-0">
                         <td className="p-4">
-                          {new Date(event.delay * 1000).toISOString().substr(11, 8)}
+                        {formatTime(event.start - event.delay_start)}
                         </td>
                         <td className="p-4">
                           <span 

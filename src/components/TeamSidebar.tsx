@@ -20,9 +20,7 @@ export default function TeamSidebar({ teamId, activeTab }: TeamSidebarProps) {
 
   useEffect(() => {
     const handleResize = () => {
-      console.log(window.innerWidth);
       if (window.innerWidth <= 768) {
-        console.log('isfalse')
         setIsExpanded(false);
       }
     };

@@ -8,7 +8,7 @@ import MatchDetail from './pages/MatchDetail';
 import LiveAnalysis from './pages/LiveAnalysis';
 import Players from './pages/Players';
 import MatchLineup from './pages/MatchLineup';
-import CustomActions from './pages/CustomActions';
+import Actions from './pages/Actions';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
 
@@ -24,7 +24,7 @@ function App() {
             <Route path="/" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
             <Route path="/team/:teamId/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
             <Route path="/team/:teamId/players" element={<ProtectedRoute><Players /></ProtectedRoute>} />
-            <Route path="/team/:teamId/actions" element={<ProtectedRoute><CustomActions /></ProtectedRoute>} />
+            <Route path="/team/:teamId/actions" element={<ProtectedRoute><Actions /></ProtectedRoute>} />
             <Route path="/match/:matchId" element={<ProtectedRoute><MatchDetail /></ProtectedRoute>} />
             <Route path="/match/:matchId/live" element={<ProtectedRoute><LiveAnalysis /></ProtectedRoute>} />
             <Route path="/match/:matchId/lineup" element={<ProtectedRoute><MatchLineup /></ProtectedRoute>} />

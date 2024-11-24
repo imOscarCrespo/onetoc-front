@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Pause, RotateCcw, Plus, LogOut, Edit2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Plus, Edit2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/axios';
 import { useTimer } from '../hooks/useTimer';
@@ -8,7 +8,6 @@ import { useMatchStats } from '../hooks/useMatchStats';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import Modal from '../components/Modal';
-import Header from '../components/Header';
 
 interface Match {
   id: number;
@@ -111,11 +110,11 @@ export default function LiveAnalysis() {
         console.error('Action not found:', actionKey);
         throw new Error(`Action not found: ${actionKey}`);
       }
-
       const eventResponse = await api.post('/event', {
         match: Number(matchId),
         action: selectedAction.id,
-        delay: time,
+        start: time,
+        delay_start: 7,
         type: actionKey
       });
 
@@ -302,9 +301,9 @@ export default function LiveAnalysis() {
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <span className="font-mono">{formatTime(event.delay)}</span>
+                <span className="font-mono">{formatTime(event.start-event.delay_start)}</span>
                 {translation && (
-                  <span>{translation.name} {translation.emoji}</span>
+                  <span>{translation.name}</span>
                 )}
               </div>
               <span className="text-xs sm:text-sm text-gray-500">

@@ -20,31 +20,32 @@ interface Action {
 
 type ModalType = 'create' | 'edit' | 'delete';
 
-export default function CustomActions() {
+export default function Actions() {
   const { teamId } = useParams();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>('create');
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [actionName, setActionName] = useState('');
+  const [isTemporal, setIsTemporal] = useState(false);
 
   const { data: actions } = useQuery<Action[]>({
     queryKey: ['actions', teamId],
     queryFn: async () => {
       const response = await api.get(`/action?team=${teamId}`);
-      return response.data;
+      return response.data.filter((action: Action) => !action.default);
     },
   });
 
   const createAction = useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async ({ name, isTemporal }: { name: string; isTemporal: boolean }) => {
       return api.post('/action', {
         name,
         color: '#000000',
         team: Number(teamId),
-        match: null,
         enabled: true,
-        default: true
+        default: true,
+        temporal: isTemporal
       });
     },
     onSuccess: () => {
@@ -95,7 +96,7 @@ export default function CustomActions() {
     e.preventDefault();
     if (actionName.trim()) {
       if (modalType === 'create') {
-        createAction.mutate(actionName);
+        createAction.mutate({ name: actionName, isTemporal });
       } else if (modalType === 'edit' && selectedAction) {
         updateAction.mutate({ id: selectedAction.id, name: actionName });
       }
@@ -162,6 +163,7 @@ export default function CustomActions() {
           setIsModalOpen(false);
           setActionName('');
           setSelectedAction(null);
+          setIsTemporal(false);
         }}
         title={modalType === 'create' ? 'Create New Action' : 'Edit Action'}
       >
@@ -180,6 +182,18 @@ export default function CustomActions() {
             />
           </div>
 
+          <div className="mt-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={isTemporal}
+                onChange={(e) => setIsTemporal(e.target.checked)}
+                className="mr-2"
+              />
+              <span className="text-sm">Is this action temporal?</span>
+            </label>
+          </div>
+
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
@@ -187,6 +201,7 @@ export default function CustomActions() {
                 setIsModalOpen(false);
                 setActionName('');
                 setSelectedAction(null);
+                setIsTemporal(false);
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
             >
