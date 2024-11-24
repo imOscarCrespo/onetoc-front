@@ -11,7 +11,7 @@ on:
 
 jobs:
   # To build the project
-  build-tambola:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checking out code
@@ -32,7 +32,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Deploy to S3 bucket
-        run: aws s3 sync ./build/ s3://deploy-onetoc-app-v2 --delete
+        run: aws s3 sync ./dist/ s3://deploy-onetoc-app-v2 --delete
       - name: Invalidate CloudFront
         uses: chetan/invalidate-cloudfront-action@v2
         env:
