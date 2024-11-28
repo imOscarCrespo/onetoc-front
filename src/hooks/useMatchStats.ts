@@ -3,9 +3,13 @@ import { api } from '../lib/axios';
 
 interface Action {
   id: number;
-  key: string;
   name: string;
-  match: number;
+  key: string;
+  color: string;
+  match: number | null;
+  enabled: boolean;
+  default: boolean;
+  team: number;
 }
 
 interface Event {
@@ -31,11 +35,12 @@ export function useMatchStats(matchId: string) {
     },
   });
 
-  const { data: actions } = useQuery<Action[]>({
+  const { data: actions = [] } = useQuery<Action[]>({
     queryKey: ['actions', matchId],
     queryFn: async () => {
       if (!match?.team) return [];
       const response = await api.get(`/action?&team=${match.team}`);
+      console.log('Acciones disponibles:', response.data);
       return response.data;
     },
     enabled: !!match?.team

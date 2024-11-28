@@ -33,6 +33,7 @@ export default function Actions() {
     queryKey: ['actions', teamId],
     queryFn: async () => {
       const response = await api.get(`/action?team=${teamId}`);
+      console.log('response', response.data);
       return response.data.filter((action: Action) => !action.default);
     },
   });
@@ -44,7 +45,7 @@ export default function Actions() {
         color: '#000000',
         team: Number(teamId),
         enabled: true,
-        default: true,
+        default: false,
         temporal: isTemporal
       });
     },

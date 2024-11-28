@@ -138,6 +138,8 @@ export default function LiveAnalysis() {
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   ) || [];
 
+  console.log('sortedEvents', sortedEvents);
+
   const renderTeamStats = (isHome: boolean) => (
     <div className="flex items-center justify-center gap-1 xs:gap-2 sm:gap-4 mt-2 text-xs sm:text-sm">
       <div className="flex items-center gap-0.5 xs:gap-1">
@@ -231,58 +233,147 @@ export default function LiveAnalysis() {
 
       <div className="space-y-3 sm:space-y-4">
         {/* Generic Event Button */}
+        <div className="flex justify-between">
         <button
           onClick={() => createEvent.mutate('automatic')}
           disabled={createEvent.isPending}
-          className="w-full btn bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 px-4 sm:px-8 py-3 sm:py-4 text-base sm:text-lg"
+          className="w-full btn bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 text-base sm:text-lg"
         >
           <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
           <span className="flex items-center gap-2">
-            Record Event {actionTranslations['automatic'].emoji}
+            First Half {actionTranslations['automatic'].emoji}
           </span>
         </button>
+        <button
+          onClick={() => createEvent.mutate('first_half')}
+          disabled={createEvent.isPending}
+          className="w-full btn bg-black-500 hover:bg-black-600 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 text-base sm:text-lg ml-2"
+        >
+          <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+          <span className="flex items-center gap-2">
+            First Half {actionTranslations['first_half'].emoji}
+          </span>
+        </button>
+        </div>
 
         {/* Events Grid */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <div className="space-y-2">
             <p className="text-xs sm:text-sm font-medium text-center mb-2">{selectedTeamName} 🏠</p>
-            {['substitution', 'yellow_card', 'red_card', 'goal', 'corner'].map(key => (
+            <div className="grid grid-cols-2 gap-2">
               <button
-                key={key}
-                onClick={() => createEvent.mutate(key)}
+                onClick={() => createEvent.mutate('substitution')}
                 disabled={createEvent.isPending}
-                className={`w-full btn text-sm sm:text-base py-2 sm:py-3 ${
-                  key === 'substitution' ? 'bg-purple-500 hover:bg-purple-600' :
-                  key === 'yellow_card' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                  key === 'red_card' ? 'bg-red-500 hover:bg-red-600' :
-                  key === 'goal' ? 'bg-green-500 hover:bg-green-600' :
-                  'bg-orange-500 hover:bg-orange-600'
-                }`}
+                className="w-full btn text-xs sm:text-sm py-3 bg-purple-500 hover:bg-purple-600 flex items-center justify-center h-14"
               >
-                {actionTranslations[key]?.name} {actionTranslations[key]?.emoji}
+                <span>{actionTranslations['substitution']?.name} {actionTranslations['substitution']?.emoji}</span>
               </button>
-            ))}
+              <button
+                onClick={() => createEvent.mutate('corner')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-orange-500 hover:bg-orange-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['corner']?.name} {actionTranslations['corner']?.emoji}</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => createEvent.mutate('yellow_card')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['yellow_card']?.name} {actionTranslations['yellow_card']?.emoji}</span>
+              </button>
+              <button
+                onClick={() => createEvent.mutate('red_card')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-red-500 hover:bg-red-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['red_card']?.name} {actionTranslations['red_card']?.emoji}</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => createEvent.mutate('goal')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-green-500 hover:bg-green-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['goal']?.name} {actionTranslations['goal']?.emoji}</span>
+              </button>
+              <button
+                onClick={() => createEvent.mutate('goal_kick')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-blue-500 hover:bg-blue-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['goal_kick']?.name} {actionTranslations['goal_kick']?.emoji}</span>
+              </button>
+            </div>
           </div>
-          
           <div className="space-y-2">
             <p className="text-xs sm:text-sm font-medium text-center mb-2">{match?.name} 🚌</p>
-            {['substitution_opponent', 'yellow_card_opponent', 'red_card_opponent', 'goal_opponent', 'corner_opponent'].map(key => (
+            <div className="grid grid-cols-2 gap-2">
               <button
-                key={key}
-                onClick={() => createEvent.mutate(key)}
+                onClick={() => createEvent.mutate('substitution_opponent')}
                 disabled={createEvent.isPending}
-                className={`w-full btn text-sm sm:text-base py-2 sm:py-3 ${
-                  key === 'substitution_opponent' ? 'bg-purple-500 hover:bg-purple-600' :
-                  key === 'yellow_card_opponent' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                  key === 'red_card_opponent' ? 'bg-red-500 hover:bg-red-600' :
-                  key === 'goal_opponent' ? 'bg-green-500 hover:bg-green-600' :
-                  'bg-orange-500 hover:bg-orange-600'
-                }`}
+                className="w-full btn text-xs sm:text-sm py-3 bg-purple-500 hover:bg-purple-600 flex items-center justify-center h-14"
               >
-                {actionTranslations[key]?.shortName || actionTranslations[key]?.name} {actionTranslations[key]?.emoji}
+                <span>{actionTranslations['substitution_opponent']?.name} {actionTranslations['substitution_opponent']?.emoji}</span>
               </button>
-            ))}
+              <button
+                onClick={() => createEvent.mutate('corner_opponent')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-orange-500 hover:bg-orange-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['corner_opponent']?.name} {actionTranslations['corner_opponent']?.emoji}</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => createEvent.mutate('yellow_card_opponent')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['yellow_card_opponent']?.name} {actionTranslations['yellow_card_opponent']?.emoji}</span>
+              </button>
+              <button
+                onClick={() => createEvent.mutate('red_card_opponent')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-red-500 hover:bg-red-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['red_card_opponent']?.name} {actionTranslations['red_card_opponent']?.emoji}</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => createEvent.mutate('goal_opponent')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-green-500 hover:bg-green-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['goal_opponent']?.name} {actionTranslations['goal_opponent']?.emoji}</span>
+              </button>
+              <button
+                onClick={() => createEvent.mutate('goal_kick_opponent')}
+                disabled={createEvent.isPending}
+                className="w-full btn text-xs sm:text-sm py-3 bg-blue-500 hover:bg-blue-600 flex items-center justify-center h-14"
+              >
+                <span>{actionTranslations['goal_kick_opponent']?.name} {actionTranslations['goal_kick_opponent']?.emoji}</span>
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* New Actions Grid */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-4">
+          {actions?.filter(action => !action.default).map(action => (
+            <button
+              key={action.id}
+              onClick={() => createEvent.mutate(action.key)}
+              disabled={createEvent.isPending}
+              className="w-full btn text-xs sm:text-sm py-2 bg-gray-500 hover:bg-gray-400 flex items-center justify-center h-12"
+            >
+              {action.name}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -292,8 +383,14 @@ export default function LiveAnalysis() {
     <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
       <div className="space-y-3">
         {sortedEvents.map((event) => {
-          const action = actions?.find(a => a.id === event.action);
-          const translation = action ? actionTranslations[action.key] : null;
+          const action = actions.find(a => a.id === event.action);
+          
+          if (!action) {
+            console.error('Action not found for event:', event);
+            return null;
+          }
+          console.log('** action', action);
+          const translation = actionTranslations[action.key]?.name || action.name;
           
           return (
             <div
@@ -303,7 +400,7 @@ export default function LiveAnalysis() {
               <div className="flex items-center gap-3">
                 <span className="font-mono">{formatTime(event.start-event.delay_start)}</span>
                 {translation && (
-                  <span>{translation.name}</span>
+                  <span>{translation}</span>
                 )}
               </div>
               <span className="text-xs sm:text-sm text-gray-500">

@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/axios';
-import { actionTranslations } from '../translations/actions';
 
 interface Action {
   id: number;
