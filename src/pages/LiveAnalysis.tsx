@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Pause, RotateCcw, Plus, Edit2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/axios';
 import { useTimer } from '../hooks/useTimer';
@@ -131,6 +131,19 @@ export default function LiveAnalysis() {
     onError: (error) => {
       console.error('Event creation error:', error);
       toast.error('Failed to record event');
+    }
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: async (eventId: number) => {
+      return api.delete(`/event/${eventId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events', matchId] });
+      toast.success('Evento eliminado con éxito');
+    },
+    onError: () => {
+      toast.error('Error al eliminar el evento');
     }
   });
 
@@ -375,7 +388,6 @@ export default function LiveAnalysis() {
             console.error('Action not found for event:', event);
             return null;
           }
-          console.log('** action', action);
           const translation = actionTranslations[action.key]?.name || action.name;
           
           return (
@@ -384,7 +396,7 @@ export default function LiveAnalysis() {
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <span className="font-mono">{formatTime(event.start-event.delay_start)}</span>
+                <span className="font-mono">{formatTime(event.start - event.delay_start)}</span>
                 {translation && (
                   <span>{translation}</span>
                 )}
@@ -392,6 +404,13 @@ export default function LiveAnalysis() {
               <span className="text-xs sm:text-sm text-gray-500">
                 {new Date(event.created_at).toLocaleTimeString()}
               </span>
+              <button
+                onClick={() => deleteEvent.mutate(event.id)}
+                className="text-red-500 hover:text-red-700 ml-2"
+                title="Eliminar evento"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           );
         })}
