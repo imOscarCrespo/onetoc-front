@@ -1,5 +1,4 @@
 export const actionTranslations: Record<string, { name: string; shortName?: string; emoji: string }> = {
-  'automatic': { name: 'Generic Event', emoji: '📝' },
   'substitution': { name: 'Substitution', emoji: '🔄' },
   'substitution_opponent': { name: 'Opp Subst', shortName: 'Substitution', emoji: '🔄' },
   'yellow_card': { name: 'Yellow Card', emoji: '🟨' },

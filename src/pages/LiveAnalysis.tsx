@@ -228,33 +228,19 @@ export default function LiveAnalysis() {
             <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="sm:inline">Reset</span>
           </button>
-        </div>
-      </div>
-
-      <div className="space-y-3 sm:space-y-4">
-        {/* Generic Event Button */}
-        <div className="flex justify-between">
-        <button
-          onClick={() => createEvent.mutate('automatic')}
-          disabled={createEvent.isPending}
-          className="w-full btn bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 text-base sm:text-lg"
-        >
-          <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
-          <span className="flex items-center gap-2">
-            First Half {actionTranslations['automatic'].emoji}
-          </span>
-        </button>
-        <button
+          <button
           onClick={() => createEvent.mutate('first_half')}
           disabled={createEvent.isPending}
-          className="w-full btn bg-black-500 hover:bg-black-600 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 text-base sm:text-lg ml-2"
+          className="btn bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
         >
-          <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
           <span className="flex items-center gap-2">
             First Half {actionTranslations['first_half'].emoji}
           </span>
         </button>
         </div>
+      </div>
+
+      <div className="space-y-3 sm:space-y-4">
 
         {/* Events Grid */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
