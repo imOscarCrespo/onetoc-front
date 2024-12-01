@@ -21,6 +21,7 @@ interface Match {
   started_at: string;
   finished_at: string;
   mode: string;
+  second_media: string | null;
 }
 
 export default function MatchDetail() {
@@ -31,6 +32,7 @@ export default function MatchDetail() {
   const [delayAdjustment, setDelayAdjustment] = useState('');
   const [individualDelays, setIndividualDelays] = useState<Record<number, string>>({});
   const queryClient = useQueryClient();
+  const [activeHalf, setActiveHalf] = useState<'first' | 'second'>('first');
 
   const { data: match, isLoading } = useQuery<Match>({
     queryKey: ['match', matchId],
@@ -119,6 +121,21 @@ export default function MatchDetail() {
     }
   };
 
+  const firstHalfEvent = events?.find(event => {
+    const action = actions?.find(a => a.id === event.action);
+    return action?.key === 'first_half';
+  });
+
+  const filteredEvents = events?.filter(event => {
+    if (!firstHalfEvent) return true;
+    
+    if (activeHalf === 'first') {
+      return new Date(event.created_at) < new Date(firstHalfEvent.created_at);
+    } else {
+      return new Date(event.created_at) >= new Date(firstHalfEvent.created_at);
+    }
+  });
+
   if (isLoading || isLoadingActions) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -129,6 +146,28 @@ export default function MatchDetail() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveHalf('first')}
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+            activeHalf === 'first'
+              ? 'bg-black text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          First Half
+        </button>
+        <button
+          onClick={() => setActiveHalf('second')}
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+            activeHalf === 'second'
+              ? 'bg-black text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          Second Half
+        </button>
+      </div>
 
       {!match?.media && !videoUrl && (
         <div className="border border-gray-200 rounded p-8 text-center mb-8">
@@ -149,10 +188,10 @@ export default function MatchDetail() {
         </div>
       )}
 
-      {(match?.media || videoUrl) && (
+      {(match?.media || videoUrl || match?.second_media) && (
         <div className="mb-8">
           <VideoPlayer 
-            videoUrl={match?.media || videoUrl || ''} 
+            videoUrl={activeHalf === 'first' ? (match?.media || videoUrl || '') : (match?.second_media || '')}
             onFileChange={(file) => {
               handleFileUpload(file);
               toast.success('Match footage updated successfully');
@@ -166,7 +205,7 @@ export default function MatchDetail() {
               const result = await createEvent.mutateAsync(timestamp.toString());
               return result;
             }}
-            initialMarkers={events?.map(event => ({
+            initialMarkers={filteredEvents?.map(event => ({
               timestamp: event.start-event.delay_start,
               date: event.created_at
             })).sort((a, b) => 
@@ -206,12 +245,12 @@ export default function MatchDetail() {
           className="flex items-center gap-2 text-lg font-medium p-4 w-full hover:bg-gray-50 transition-colors"
         >
           {showEvents ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          Events ({events?.length || 0})
+          Events ({filteredEvents?.length || 0})
         </button>
 
         {showEvents && (
           <div className="border-t border-gray-200">
-            {events && events.length > 0 ? (
+            {filteredEvents && filteredEvents.length > 0 ? (
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
@@ -221,7 +260,7 @@ export default function MatchDetail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map((event) => {
+                  {filteredEvents.map((event) => {
                     const action = actions?.find(a => a.id === event.action);
                     return (
                       <tr key={event.id} className="border-b border-gray-200 last:border-0">
