@@ -16,6 +16,7 @@ interface Action {
   enabled: boolean;
   default: boolean;
   team: number;
+  status: string;
 }
 
 type ModalType = 'create' | 'edit' | 'delete';
@@ -33,7 +34,7 @@ export default function Actions() {
     queryKey: ['actions', teamId],
     queryFn: async () => {
       const response = await api.get(`/action?team=${teamId}`);
-      console.log('response', response.data);
+
       return response.data.filter((action: Action) => !action.default);
     },
   });
@@ -61,9 +62,10 @@ export default function Actions() {
   });
 
   const updateAction = useMutation({
-    mutationFn: async ({ id, name }: { id: number; name: string }) => {
+    mutationFn: async ({ id, name, status }: { id: number; name: string; status: string }) => {
       return api.patch(`/action/${id}`, {
-        name
+        name,
+        status
       });
     },
     onSuccess: () => {
@@ -99,7 +101,7 @@ export default function Actions() {
       if (modalType === 'create') {
         createAction.mutate({ name: actionName, isTemporal });
       } else if (modalType === 'edit' && selectedAction) {
-        updateAction.mutate({ id: selectedAction.id, name: actionName });
+        updateAction.mutate({ id: selectedAction.id, name: actionName, status: selectedAction.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE' });
       }
     }
   };
@@ -247,8 +249,8 @@ export default function Actions() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {actions?.map((action) => (
               <div
-                key={action.id}
-                className="bg-white rounded-lg border border-gray-200 p-4 hover:border-black transition-colors"
+                key={action.id} 
+                className={`rounded-lg border p-4 transition-colors ${action.status === 'INACTIVE' ? 'bg-gray-300 border-gray-500 opacity-70' : 'bg-white border-gray-200 hover:border-black'}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
@@ -267,8 +269,18 @@ export default function Actions() {
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
+                      onClick={() => {
+                        const newStatus = action.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
+                        updateAction.mutate({ id: action.id, name: action.name ,  status: newStatus });
+                      }}
+                      className={`p-2 rounded-full transition-colors ${action.status === 'INACTIVE'? 'text-500 hover:bg-50' : 'text-500 hover:bg-50'}`}
+                      title={action.status === 'INACTIVE'? 'Enable action' : 'Disable action'}
+                    >
+                      {action.status === 'INACTIVE' ? 'Enable' : 'Disable'}
+                    </button>
+                    <button
                       onClick={() => handleDelete(action)}
-                      className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                      className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-50 transition-colors"
                       title="Delete action"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -278,7 +290,7 @@ export default function Actions() {
               </div>
             ))}
 
-            {!actions?.length && (
+            {!actions?.filter(action => action.status === 'ACTIVE').length && (
               <div className="col-span-full text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200">
                 No actions found. Create your first action to get started!
               </div>

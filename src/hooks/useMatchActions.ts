@@ -10,6 +10,7 @@ interface Action {
   enabled: boolean;
   default: boolean;
   team: number;
+  status: string;
 }
 
 interface Event {

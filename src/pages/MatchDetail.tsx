@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { useMatchVideo } from '../hooks/useMatchVideo';
 import { useMatchActions } from '../hooks/useMatchActions';
 import VideoPlayer from '../components/VideoPlayer';
-import { ChevronDown, ChevronUp, Save } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useTimer } from '../hooks/useTimer';
 
@@ -81,6 +81,21 @@ export default function MatchDetail() {
     },
     onError: () => {
       toast.error('Failed to update event time');
+    }
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: async (eventId: number) => {
+      await api.patch(`/event/${eventId}/`, {
+        status: 'DELETED'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events', matchId] });
+      toast.success('Event hidden successfully');
+    },
+    onError: () => {
+      toast.error('Failed to hide event');
     }
   });
 
@@ -257,6 +272,7 @@ export default function MatchDetail() {
                     <th className="text-left p-4 text-sm font-medium">Time</th>
                     <th className="text-left p-4 text-sm font-medium">Action</th>
                     <th className="text-left p-4 text-sm font-medium">Adjust Time</th>
+                    <th className="text-left p-4 text-sm font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -297,6 +313,14 @@ export default function MatchDetail() {
                               title="Save time adjustment"
                             >
                               <Save className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteEvent.mutate(event.id)}
+                              disabled={deleteEvent.isPending}
+                              className="btn p-2 bg-red-50 hover:bg-red-100 text-red-600"
+                              title="Hide event"
+                            >
+                              <EyeOff className="w-4 h-4" />
                             </button>
                           </div>
                         </td>

@@ -10,6 +10,7 @@ interface Action {
   enabled: boolean;
   default: boolean;
   team: number;
+  status: string;
 }
 
 interface Event {
@@ -40,7 +41,6 @@ export function useMatchStats(matchId: string) {
     queryFn: async () => {
       if (!match?.team) return [];
       const response = await api.get(`/action?&team=${match.team}`);
-      console.log('Acciones disponibles:', response.data);
       return response.data;
     },
     enabled: !!match?.team

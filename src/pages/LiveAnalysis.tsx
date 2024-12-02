@@ -151,7 +151,6 @@ export default function LiveAnalysis() {
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   ) || [];
 
-  console.log('sortedEvents', sortedEvents);
 
   const renderTeamStats = (isHome: boolean) => (
     <div className="flex items-center justify-center gap-1 xs:gap-2 sm:gap-4 mt-2 text-xs sm:text-sm">
@@ -316,14 +315,14 @@ export default function LiveAnalysis() {
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-purple-500 hover:bg-purple-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['substitution_opponent']?.name} {actionTranslations['substitution_opponent']?.emoji}</span>
+                <span>{actionTranslations['substitution_opponent']?.name.replace('Opp', '')} {actionTranslations['substitution_opponent']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('corner_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-orange-500 hover:bg-orange-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['corner_opponent']?.name} {actionTranslations['corner_opponent']?.emoji}</span>
+                <span>{actionTranslations['corner_opponent']?.name.replace('Opp', '')} {actionTranslations['corner_opponent']?.emoji}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -332,14 +331,14 @@ export default function LiveAnalysis() {
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['yellow_card_opponent']?.name} {actionTranslations['yellow_card_opponent']?.emoji}</span>
+                <span>{actionTranslations['yellow_card_opponent']?.name.replace('Opp', '')} {actionTranslations['yellow_card_opponent']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('red_card_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-red-500 hover:bg-red-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['red_card_opponent']?.name} {actionTranslations['red_card_opponent']?.emoji}</span>
+                <span>{actionTranslations['red_card_opponent']?.name.replace('Opp', '')} {actionTranslations['red_card_opponent']?.emoji}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -348,22 +347,23 @@ export default function LiveAnalysis() {
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-green-500 hover:bg-green-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['goal_opponent']?.name} {actionTranslations['goal_opponent']?.emoji}</span>
+                <span>{actionTranslations['goal_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_opponent']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('goal_kick_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-blue-500 hover:bg-blue-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['goal_kick_opponent']?.name} {actionTranslations['goal_kick_opponent']?.emoji}</span>
+                <span>{actionTranslations['goal_kick_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_kick_opponent']?.emoji}</span>
               </button>
             </div>
           </div>
         </div>
-
-        {/* New Actions Grid */}
+        
+        {/* Separador para diferenciar los tipos de acciones */}
+        <hr className="my-4 border-gray-300" />
         <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-4">
-          {actions?.filter(action => !action.default).map(action => (
+          {actions?.filter(action => !action.default && action.status !== 'INACTIVE').map(action => (
             <button
               key={action.id}
               onClick={() => createEvent.mutate(action.key)}
