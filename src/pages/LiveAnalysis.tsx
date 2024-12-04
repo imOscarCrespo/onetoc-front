@@ -293,11 +293,11 @@ export default function LiveAnalysis() {
                 <span>{actionTranslations['free_kick']?.name} {actionTranslations['free_kick']?.emoji}</span>
               </button>
               <button
-                onClick={() => createEvent.mutate('red_card')}
+                onClick={() => createEvent.mutate('goalkeeper')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-red-500 hover:bg-red-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['red_card']?.name} {actionTranslations['red_card']?.emoji}</span>
+                <span>{actionTranslations['goalkeeper']?.name} {actionTranslations['goalkeeper']?.emoji}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -344,11 +344,11 @@ export default function LiveAnalysis() {
                 <span>{actionTranslations['free_kick_opponent']?.name.replace('Opp', '')} {actionTranslations['free_kick_opponent']?.emoji}</span>
               </button>
               <button
-                onClick={() => createEvent.mutate('red_card_opponent')}
+                onClick={() => createEvent.mutate('goalkeeper_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-red-500 hover:bg-red-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['red_card_opponent']?.name.replace('Opp', '')} {actionTranslations['red_card_opponent']?.emoji}</span>
+                <span>{actionTranslations['goalkeeper_opponent']?.name.replace('Opp', '')} {actionTranslations['goalkeeper_opponent']?.emoji}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">

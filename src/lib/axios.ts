@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://onetoc-backend-production.up.railway.app';
+const BASE_URL = 'https://onetoc-backend-production.up.railway.app';
 
 
 export const api = axios.create({

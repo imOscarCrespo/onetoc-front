@@ -17,4 +17,6 @@ export const actionTranslations: Record<string, { name: string; shortName?: stri
   'free_kick_opponent': { name: 'Opp Free Kick', shortName: 'Free Kick', emoji: '' },
   'goal_chance': { name: 'Goal Chance', emoji: '' },
   'goal_chance_opponent': { name: 'Opp Goal Chance', shortName: 'Goal Chance', emoji: '' },
+  'goalkeeper': { name: 'Goalkeeper', emoji: '' },
+  'goalkeeper_opponent': { name: 'Opp Goalkeeper', shortName: 'Goalkeeper', emoji: '' },
 };
