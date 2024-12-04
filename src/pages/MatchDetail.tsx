@@ -87,7 +87,7 @@ export default function MatchDetail() {
   const deleteEvent = useMutation({
     mutationFn: async (eventId: number) => {
       await api.patch(`/event/${eventId}/`, {
-        status: 'DELETED'
+        status: 'INACTIVE'
       });
     },
     onSuccess: () => {

@@ -43,6 +43,7 @@ export default function LiveAnalysis() {
   const [activeTab, setActiveTab] = useState<Tab>('analysis');
   const { actions, events } = useMatchStats(matchId || '');
 
+
   const { data: match } = useQuery<Match>({
     queryKey: ['match', matchId],
     queryFn: async () => {
@@ -249,6 +250,15 @@ export default function LiveAnalysis() {
             First Half {actionTranslations['first_half'].emoji}
           </span>
         </button>
+        <button
+          onClick={() => createEvent.mutate('automatic')}
+          disabled={createEvent.isPending}
+          className="btn bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
+        >
+          <span className="flex items-center gap-2">
+            Auto Event {actionTranslations['automatic'].emoji}
+          </span>
+        </button>
         </div>
       </div>
 
@@ -260,11 +270,11 @@ export default function LiveAnalysis() {
             <p className="text-xs sm:text-sm font-medium text-center mb-2">{selectedTeamName} 🏠</p>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => createEvent.mutate('substitution')}
+                onClick={() => createEvent.mutate('goal_kick')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-purple-500 hover:bg-purple-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['substitution']?.name} {actionTranslations['substitution']?.emoji}</span>
+                <span>{actionTranslations['goal_kick']?.name} {actionTranslations['goal_kick']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('corner')}
@@ -280,7 +290,7 @@ export default function LiveAnalysis() {
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['yellow_card']?.name} {actionTranslations['yellow_card']?.emoji}</span>
+                <span>{actionTranslations['free_kick']?.name} {actionTranslations['free_kick']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('red_card')}
@@ -299,11 +309,11 @@ export default function LiveAnalysis() {
                 <span>{actionTranslations['goal']?.name} {actionTranslations['goal']?.emoji}</span>
               </button>
               <button
-                onClick={() => createEvent.mutate('goal_kick')}
+                onClick={() => createEvent.mutate('goal_chance')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-blue-500 hover:bg-blue-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['goal_kick']?.name} {actionTranslations['goal_kick']?.emoji}</span>
+                <span>{actionTranslations['goal_chance']?.name} {actionTranslations['goal_chance']?.emoji}</span>
               </button>
             </div>
           </div>
@@ -311,11 +321,11 @@ export default function LiveAnalysis() {
             <p className="text-xs sm:text-sm font-medium text-center mb-2">{match?.name} 🚌</p>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => createEvent.mutate('substitution_opponent')}
+                onClick={() => createEvent.mutate('goal_kick_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-purple-500 hover:bg-purple-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['substitution_opponent']?.name.replace('Opp', '')} {actionTranslations['substitution_opponent']?.emoji}</span>
+                <span>{actionTranslations['goal_kick_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_kick_opponent']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('corner_opponent')}
@@ -327,11 +337,11 @@ export default function LiveAnalysis() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => createEvent.mutate('yellow_card_opponent')}
+                onClick={() => createEvent.mutate('free_kick_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['yellow_card_opponent']?.name.replace('Opp', '')} {actionTranslations['yellow_card_opponent']?.emoji}</span>
+                <span>{actionTranslations['free_kick_opponent']?.name.replace('Opp', '')} {actionTranslations['free_kick_opponent']?.emoji}</span>
               </button>
               <button
                 onClick={() => createEvent.mutate('red_card_opponent')}
@@ -350,11 +360,11 @@ export default function LiveAnalysis() {
                 <span>{actionTranslations['goal_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_opponent']?.emoji}</span>
               </button>
               <button
-                onClick={() => createEvent.mutate('goal_kick_opponent')}
+                onClick={() => createEvent.mutate('goal_chance_opponent')}
                 disabled={createEvent.isPending}
                 className="w-full btn text-xs sm:text-sm py-3 bg-blue-500 hover:bg-blue-600 flex items-center justify-center h-14"
               >
-                <span>{actionTranslations['goal_kick_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_kick_opponent']?.emoji}</span>
+                <span>{actionTranslations['goal_chance_opponent']?.name.replace('Opp', '')} {actionTranslations['goal_chance_opponent']?.emoji}</span>
               </button>
             </div>
           </div>
