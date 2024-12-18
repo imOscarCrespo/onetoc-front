@@ -51,7 +51,7 @@
           />
 
           <div
-            v-if="!filteredActions.filter(action => action.status === 'ACTIVE').length"
+            v-if="!filteredActions.filter((action: Action) => action.status === 'ACTIVE').length"
             class="col-span-full text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200"
           >
             {{ emptyMessage }}
