@@ -33,7 +33,6 @@
             <div class="text-center flex-1">
               <p class="text-xs sm:text-sm font-medium mb-1 truncate px-2">{{ selectedTeamName }}</p>
               <p class="text-3xl sm:text-4xl font-bold mb-2">{{ matchInfo?.goal || 0 }}</p>
-              <TeamStats :stats="homeStats" />
             </div>
             <div class="px-2 sm:px-4">
               <button
@@ -47,7 +46,6 @@
             <div class="text-center flex-1">
               <p class="text-xs sm:text-sm font-medium mb-1 truncate px-2">{{ match?.name }}</p>
               <p class="text-3xl sm:text-4xl font-bold mb-2">{{ matchInfo?.goal_opponent || 0 }}</p>
-              <TeamStats :stats="awayStats" />
             </div>
           </div>
 
@@ -73,6 +71,7 @@
                 <ActionButton
                   :action-key="action.key"
                   :is-disabled="isCreatingEvent"
+                  :color="action.color"
                   class="btn bg-gray-500 hover:bg-gray-600"
                   @create-event="createEvent"
                 />
@@ -90,6 +89,7 @@
                   v-for="action in defaultActions"
                   :key="action.id"
                   :action-key="action.key"
+                  :color="action.color"
                   :is-disabled="isCreatingEvent"
                   class="bg-gray-500 hover:bg-gray-400"
                   @create-event="createEvent"
@@ -101,6 +101,7 @@
                   v-for="action in defaultActionsOpponent"
                   :key="action.id"
                   :action-key="action.key"
+                  :color="action.color"
                   :is-disabled="isCreatingEvent"
                   class="bg-gray-500 hover:bg-gray-400"
                   @create-event="createEvent"
@@ -116,6 +117,7 @@
                 :key="action.id"
                 :action-key="action.key"
                 :is-disabled="isCreatingEvent"
+                :color="action.color"
                 class="bg-gray-500 hover:bg-gray-400"
                 @create-event="createEvent"
               />
@@ -269,7 +271,6 @@ const fetchInitialData = async () => {
     eventsData.value = eventsRes.data;
   } catch (error) {
     toast.error('Failed to load match data');
-    console.error('Error loading initial data:', error);
   } finally {
     isLoading.value = false;
   }
@@ -293,19 +294,34 @@ const { data: matchInfo } = useQuery<MatchInfo>({
 
 const createEventMutation = useMutation({
   mutationFn: async (actionKey: string) => {
-    const action = actionsData.value.find((a: Action) => a.key === actionKey);
+    const allActions = [...actionsData.value, ...actionsMatchData.value, ...actionsOpponentData.value];
+    const action = allActions.find((a: Action) => a.key === actionKey);
     if (!action) throw new Error('Action not found');
 
-    return api.post('/event', {
+    const response = await api.post('/event', {
       match: matchId,
       action: action.id,
       start: time.value,
-      delay_start: 0
+      delay_start: time.value < 6 ? 0 : 5
     });
+
+    // Actualizar matchInfo si es un gol
+    if (action.key === 'goal' || action.key === 'goal_opponent') {
+      const currentMatchInfo = matchInfoData.value;
+      if (currentMatchInfo) {
+        await api.patch(`/matchInfo/${currentMatchInfo.id}`, {
+          goal: action.key === 'goal' ? (currentMatchInfo.goal || 0) + 1 : currentMatchInfo.goal,
+          goal_opponent: action.key === 'goal_opponent' ? (currentMatchInfo.goal_opponent || 0) + 1 : currentMatchInfo.goal_opponent
+        });
+      }
+    }
+
+    return response;
   },
   onSuccess: async () => {
     // Refetch data after successful mutation
     await fetchInitialData();
+    await queryClient.invalidateQueries({ queryKey: ['match-info', matchId] });
   }
 });
 
@@ -349,7 +365,7 @@ const awayStats = computed(() => ({
 const isCreatingEvent = computed(() => createEventMutation.isPending.value);
 
 const timerActions = computed(() => 
-  actionsData.value.filter((action: Action) => 
+  actionsMatchData.value.filter((action: Action) => 
     action.key === 'first_half' || action.key === 'automatic'
   )
 );
@@ -372,6 +388,7 @@ const deleteEventMutation = useMutation({
 
 const updateScoreMutation = useMutation({
   mutationFn: async ({ home, away }: { home: string; away: string }) => {
+    console.log('updateScoreMutation', home, away);
     if (!matchInfoData.value) return;
     
     return api.patch(`/matchInfo/${matchInfoData.value.id}`, {
@@ -392,10 +409,12 @@ const updateScoreMutation = useMutation({
 // Methods
 const createEvent = async (actionKey: string) => {
   try {
+    console.log('actionKey', actionKey);
     await createEventMutation.mutateAsync(actionKey);
     toast.success('Event recorded successfully');
   } catch (error) {
     toast.error('Failed to record event');
+    console.log('error', error);
   }
 };
 

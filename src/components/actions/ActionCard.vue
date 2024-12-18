@@ -61,3 +61,9 @@ defineEmits<{
   (e: 'toggle-status', action: Action): void;
 }>();
 </script>
+
+<script lang="ts">
+export default {
+  name: 'ActionCard'
+}
+</script>

@@ -36,3 +36,9 @@ defineEmits<{
   (e: 'cancel'): void;
 }>();
 </script>
+
+<script lang="ts">
+export default {
+  name: 'DeleteActionConfirm'
+}
+</script>

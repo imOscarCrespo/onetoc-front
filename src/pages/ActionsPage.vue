@@ -70,6 +70,7 @@
             :mode="modalType"
             :is-temporal="isTemporal"
             @update:is-temporal="isTemporal = $event"
+            @update:action-data="actionData = $event"
             @submit="handleSubmit"
             @cancel="closeModal"
           />
@@ -142,10 +143,10 @@ const emptyMessage = computed(() => {
 });
 
 const createActionMutation = useMutation({
-  mutationFn: async ({ name, isTemporal }: { name: string; isTemporal: boolean }) => {
+  mutationFn: async ({ name, isTemporal, color }: { name: string; isTemporal: boolean; color: string  }) => {
     const response = await api.post('/action', {
       name,
-      color: '#000000',
+      color,
       team: Number(teamId),
       enabled: true,
       default: false,
@@ -165,11 +166,13 @@ const createActionMutation = useMutation({
 });
 
 const updateActionMutation = useMutation({
-  mutationFn: async ({ id, name, status }: { id: number; name: string; status: string }) => {
+  mutationFn: async ({ id, name, status, color }: { id: number; name: string; status: string; color: string }) => {
     const response = await api.patch(`/action/${id}`, {
       name,
-      status
+      status,
+      color
     });
+
     return response.data;
   },
   onSuccess: async () => {
@@ -207,7 +210,7 @@ const handleEdit = (action: Action) => {
   selectedAction.value = action;
   actionData.value = {
     name: action.name,
-    color: action.color
+    color: action.color || ''
   };
   isModalOpen.value = true;
 };
@@ -223,7 +226,8 @@ const handleToggleStatus = (action: Action) => {
   updateActionMutation.mutate({ 
     id: action.id, 
     name: action.name, 
-    status: newStatus 
+    status: newStatus,
+    color: action.color
   });
 };
 
@@ -232,13 +236,15 @@ const handleSubmit = () => {
   if (modalType.value === 'create') {
     createActionMutation.mutate({ 
       name: actionData.value.name, 
-      isTemporal: isTemporal.value 
+      isTemporal: isTemporal.value,
+      color: actionData.value.color
     });
   } else if (modalType.value === 'edit' && selectedAction.value) {
     updateActionMutation.mutate({
       id: selectedAction.value.id,
       name: actionData.value.name,
-      status: selectedAction.value.status
+      color: actionData.value.color,
+      status: selectedAction.value.status,
     });
   }
 };
@@ -253,7 +259,7 @@ const confirmDelete = () => {
 const resetForm = () => {
   actionData.value = {
     name: '',
-    color: '#000000'
+    color: ''
   };
   isTemporal.value = false;
   selectedAction.value = null;
